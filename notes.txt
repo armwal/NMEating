@@ -1,0 +1,7 @@
+Bei Fehler beim Ausführen von pdf2txt
+
+UnicodeEncodeError: 'charmap' codec can't encode character '\u20ac' in position 0: character maps to <undefined>
+
+muss die Codepage in der Kommandozeile noch auf UTF-8 umgestellt werden:
+
+chcp 65001
