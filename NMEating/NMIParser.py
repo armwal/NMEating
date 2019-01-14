@@ -1,5 +1,6 @@
 import re
 import datetime
+from decimal import Decimal
 
 from pdfminer.pdfparser import PDFParser, PDFDocument
 from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
@@ -15,7 +16,7 @@ def process_file(filename):
 def parse_cost_line(line):
     money = re.compile('[0-9]+,[0-9][0-9] EUR')
     found = money.findall(line)
-    return found
+    return list([Decimal(re.sub(',','.',re.sub('[^\d,]','',f))) for f in found])
 
 def parse_meal_text(text):
     daysOfWeek = ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag']
@@ -26,7 +27,7 @@ def parse_meal_text(text):
         line = lines[i]
         if line.strip() == daysOfWeek[currentDay]:
             currentDay += 1
-            meal = lines[i+1].strip().strip('1234567890,')
+            meal = lines[i+1].strip().strip('1234567890,').strip().strip('1234567890,')
             cost = lines[i+2].strip()
             if any(char.isdigit() for char in cost):
                 # probably a meal
@@ -34,7 +35,7 @@ def parse_meal_text(text):
                 meals = meals + [tuple([meal, costs])]
             elif any(char.isdigit() for char in lines[i+3].strip()):
                 # probably two-line meal
-                meal += ' ' + cost.strip('1234567890,')
+                meal += ' ' + cost.strip().strip('1234567890,').strip().strip('1234567890,')
                 cost = lines[i+3].strip()
                 costs = parse_cost_line(cost)
                 meals = meals + [tuple([meal, costs])]

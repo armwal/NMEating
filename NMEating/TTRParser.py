@@ -1,6 +1,8 @@
 import os
 import subprocess
 import re
+from re import sub
+from decimal import Decimal
 from PIL import Image
 
 def process_file(filePath, outFolder):
@@ -10,9 +12,15 @@ def process_file(filePath, outFolder):
     for day in range(5):
         lines = process_sub_image(image, tess, outFolder, filePath, day)
         soup, meal, mealcost, veg, vegcost, dessert = parse_lines(lines)
+        mealcost = parse_cost(mealcost)
+        vegcost = parse_cost(vegcost)
         meals = meals + [tuple([soup, meal, mealcost, veg, vegcost, dessert])]
     return meals
 
+def parse_cost(cost):
+    if len(cost) == 0 or cost == '?':
+        return cost
+    return Decimal(sub(',','.',sub(r'[^\d.]', '', cost)))
 
 def process_sub_image(image, tess, outFolder, filePath, day):
     fileName = os.path.basename(filePath)
@@ -29,8 +37,8 @@ def process_sub_image(image, tess, outFolder, filePath, day):
     f = open(tessname + '.txt', encoding='utf8')
     lines = f.readlines()
     f.close()
-    os.remove(outfilename)
-    os.remove(tessname + '.txt')
+    #os.remove(outfilename)
+    #os.remove(tessname + '.txt')
     return list([l.strip() for l in lines])
     
 def parse_lines(lines):
@@ -38,8 +46,10 @@ def parse_lines(lines):
     i = 0
     while len(lines[i]) == 0:
         i += 1
-    soup = lines[i]
-    i += 1
+    soup = ''
+    while len(lines[i]) > 0:
+        soup += ' ' + lines[i]
+        i += 1
     while len(lines[i]) == 0:
         i += 1
     meal = ''
