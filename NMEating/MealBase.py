@@ -1,6 +1,7 @@
 import sqlite3
 import os
 import NMIParser
+import TTRParser
 
 os.remove(r'i:\Repositories\NMEating\database\test.db')
 conn = sqlite3.connect(r'i:\Repositories\NMEating\database\test.db')
@@ -63,6 +64,24 @@ for dname in distinct:
     command = """INSERT INTO NMImeals (meal_number, name) VALUES (NULL, ?);"""
     cursor.execute(command, (dname[0],))
 
+for file in os.listdir(folder):
+    if not file.endswith('.png'):
+        continue
+    meals, date = TTRParser.process_file(folder + file, folder)
+    format_str = """INSERT INTO TTRplan (plan_number, name, price, date, year, week) VALUES (NULL, \"{name}\", {price}, ?, {year}, {week});"""
+    for m in meals:
+        soup, meal, mealcost, veg, vegcost, dessert = m
+        if mealcost == '?':
+            command = format_str.format(name=meal, price='NULL', year=date.year, week=date.isocalendar()[1])
+        else:
+            command = format_str.format(name=meal, price=int(mealcost), year=date.year, week=date.isocalendar()[1])
+        cursor.execute(command, (date,))
+command = """SELECT DISTINCT name FROM TTRplan;"""
+cursor.execute(command)
+distinct = cursor.fetchall()
+for dname in distinct:
+    command = """INSERT INTO TTRmeals (meal_number, name) VALUES (NULL, ?);"""
+    cursor.execute(command, (dname[0],))
 conn.commit()
 
 conn.close()
